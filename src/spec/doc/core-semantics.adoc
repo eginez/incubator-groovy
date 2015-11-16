@@ -166,9 +166,7 @@ Switch supports the following kinds of comparisons:
 * Closure case values match if the calling the closure returns a result which is true according to the <<Groovy-Truth,Groovy truth>>
 * If none of the above are used then the case value matches if the case value equals the switch value
 
-NOTE: `default` must go at the end of the switch/case. While in Java the default can be placed anywhere in the switch/case, the default in Groovy is used more as an else than assigning a default case.
-
-NOTE: when using a closure case value, the default `it` parameter is actually the switch value (in our example, variable `x`)
+NOTE: When using a closure case value, the default `it` parameter is actually the switch value (in our example, variable `x`).
 
 ==== Looping structures
 ===== Classic for loop
@@ -346,7 +344,8 @@ As an example, you can specify a path to an object or element of interest:
 
 In both cases, the GPath expression can be viewed as a query on an object graph.  For POJOs, the object graph is most often built by the
 program being written through object instantiation and composition; for XML processing, the object graph is the result of `parsing`
-the XML text, most often with classes like XmlParser or XmlSlurper.  See <<Processing XML>> for more in-depth details on consuming XML in Groovy.
+the XML text, most often with classes like XmlParser or XmlSlurper. See <<{projectdir}/subprojects/groovy-xml/{specfolder}/xml-userguide.adoc#Processing XML,Processing XML>>
+for more in-depth details on consuming XML in Groovy.
 
 [TIP]
 ====
@@ -400,11 +399,11 @@ We can decompose the expression `this.class.methods.name.grep(~/.*Bar/)` to get 
 `this.class.methods.name`:: apply a property accessor on each element of an array and produce a list of the results.
 `this.class.methods.name.grep(...)`:: call method `grep` on each element of the list yielded by `this.class.methods.name` and produce a list of the results.
 
-WARNING: a sub-expression like `this.class.methods` yields an array because this is what calling `this.getClass().getMethods()` in Java
-would produce : `GPath` expressions have not invented a convention where a `s` means a list or anything like that.
+WARNING: A sub-expression like `this.class.methods` yields an array because this is what calling `this.getClass().getMethods()` in Java
+would produce. `GPath` expressions do not have a convention where a `s` means a list or anything like that.
 
 One powerful feature of GPath expression is that property access on a collection is converted to a _property access on each element of the collection_ with
-the results collected into a collection.  Therefore, the expression `this.class.methods.name` could be expressed as follows in Java:
+the results collected into a collection. Therefore, the expression `this.class.methods.name` could be expressed as follows in Java:
 [source,java]
 ----
 List<String> methodNames = new ArrayList<String>();
@@ -776,8 +775,8 @@ True if the corresponding Boolean value is `true`.
 include::{projectdir}/src/spec/test/semantics/TheGroovyTruthTest.groovy[tags=boolean_truth,indent=0]
 ----
 
-=== Collections
-Non-empty Collections are true.
+=== Collections and Arrays
+Non-empty Collections and arrays are true.
 [source,groovy]
 ----
 include::{projectdir}/src/spec/test/semantics/TheGroovyTruthTest.groovy[tags=collection_truth,indent=0]
@@ -1745,8 +1744,8 @@ of a closure: its type is inferred from the body of the closure.
 .Closures vs methods
 ****
 It's worth noting that return type inference is only applicable to closures. While the type checker could do the
-same on a method, it is in practice not desirable: _in general_, methods can be overriden and it is not statically
-possible to make sure that the method which is called is not an overriden version. So flow typing would actually
+same on a method, it is in practice not desirable: _in general_, methods can be overridden and it is not statically
+possible to make sure that the method which is called is not an overridden version. So flow typing would actually
 think that a method returns something, while in reality, it could return something else, like illustrated in the
 following example:
 

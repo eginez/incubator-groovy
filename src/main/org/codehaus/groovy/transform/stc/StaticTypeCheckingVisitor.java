@@ -1034,7 +1034,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             " for class: " + receiverType.getName(), receiver);
                 } else {
                     ClassNode valueType = getType(entryExpression.getValueExpression());
-                    ClassNode toBeAssignedTo = lookup.get();
+                    MethodNode setter = receiverType.getSetterMethod("set" + MetaClassHelper.capitalize(pexp.getPropertyAsString()), false);
+                    ClassNode toBeAssignedTo = setter == null ? lookup.get() : setter.getParameters()[0].getType();
                     if (!isAssignableTo(valueType, toBeAssignedTo)
                             && !extension.handleIncompatibleAssignment(toBeAssignedTo, valueType, entryExpression)) {
                         addAssignmentError(toBeAssignedTo, valueType, entryExpression);
@@ -1815,6 +1816,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         virtualDecl.visit(this);
                         ClassNode newlyInferred = (ClassNode) virtualDecl.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
                         if (!missesGenericsTypes(newlyInferred)) type = newlyInferred;
+                    } else {
+                        checkTypeGenerics(enclosingMethod.getReturnType(), inferred, expression);
                     }
                     return type;
                 } else {
@@ -2362,7 +2365,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         ClassNode[] blockParameterTypes = (ClassNode[]) openBlock.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
         if (blockParameterTypes==null) {
             Parameter[] p = openBlock.getParameters();
-            if (p.length==0 && parameterTypesForSAM.length!=0) {
+            if (p == null) {
+                // zero parameter closure e.g. { -> println 'no args' }
+                blockParameterTypes = ClassNode.EMPTY_ARRAY;
+            } else if (p.length==0 && parameterTypesForSAM.length!=0) {
                 // implicit it
                 blockParameterTypes = parameterTypesForSAM;
             } else {
@@ -3367,6 +3373,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             cn = getWrapper(cn);
         } else if (exp instanceof MethodCallExpression && ((MethodCallExpression) exp).isSafe() && isPrimitiveType(cn)) {
             cn = getWrapper(cn);
+        } else if (exp instanceof PropertyExpression && ((PropertyExpression) exp).isSafe() && isPrimitiveType(cn)) {
+            cn = getWrapper(cn);
         }
         if (cn == UNKNOWN_PARAMETER_TYPE) {
             // this can happen for example when "null" is used in an assignment or a method parameter.
@@ -4283,9 +4291,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     GenericsType methodGenericType = methodGenericTypes[i];
                     GenericsType explicitTypeHint = explicitTypeHints[i];
                     resolvedPlaceholders.put(methodGenericType.getName(), explicitTypeHint);
-                }
-                for (GenericsType typeHint : explicitTypeHints) {
-                    System.err.println("Type hint = " + typeHint);
                 }
             }
         }

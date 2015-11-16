@@ -18,24 +18,57 @@
  */
 package org.codehaus.groovy.tools.shell.completion
 
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+
+import static org.junit.Assume.assumeFalse
+
+@RunWith(JUnit4)
 class FileNameCompleterTest extends GroovyTestCase {
 
+    @Test
     void testRender() {
-        FileNameCompleter completer = new FileNameCompleter()
-        assert completer.render('foo', null) == 'foo'
-        assert completer.render('foo bar', null) == '\'foo bar\''
-        assert completer.render('foo \'bar', null) == '\'foo \\\'bar\''
-        assert completer.render('foo \'bar', '\'') == '\'foo \\\'bar\''
-        assert completer.render('foo " \'bar', '"') == '"foo \\" \'bar"'
+        assert FileNameCompleter.render('foo') == 'foo'
+        assert FileNameCompleter.render('foo bar') == 'foo\\ bar'
+        // intentionally adding empty String, to get better power assert output
+        assert FileNameCompleter.render('foo \'\"bar') == 'foo\\ \\\'\\\"bar' + ''
     }
 
-    void testMatchFiles_Unix() {
-        if(! System.getProperty('os.name').startsWith('Windows')) {
-            FileNameCompleter completer = new FileNameCompleter()
-            List<String> candidates = []
-            int resultIndex = completer.matchFiles('foo/bar', '/foo/bar', [new File('/foo/baroo'), new File('/foo/barbee')] as File[], candidates, null)
-            assert resultIndex == 'foo/'.length()
-            assert candidates == ['baroo', 'barbee']
+    @Test
+    void testCompletionNoFiles() {
+        // abusing junit testrule
+        TemporaryFolder testFolder = null;
+        try {
+            testFolder = new TemporaryFolder();
+            testFolder.create()
+
+            FileNameCompleter completor = new FileNameCompleter() {
+                @Override
+                protected File getUserDir() {
+                    return testFolder.getRoot()
+                }
+            }
+            def candidates = []
+            String buffer = ''
+            assert 0 == completor.complete(buffer, 0, candidates)
+            assert [] == candidates
+        } finally {
+            if (testFolder != null) {
+                testFolder.delete()
+            }
         }
+    }
+
+    @Test
+    void testMatchFiles_Unix() {
+        assumeFalse('Test requires unix like system.', System.getProperty('os.name').startsWith('Windows'))
+
+        FileNameCompleter completer = new FileNameCompleter()
+        List<String> candidates = []
+        int resultIndex = completer.matchFiles('foo/bar', '/foo/bar', [new File('/foo/baroo'), new File('/foo/barbee')] as File[], candidates)
+        assert resultIndex == 'foo/'.length()
+        assert candidates == ['baroo ', 'barbee ']
     }
 }

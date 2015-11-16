@@ -406,7 +406,7 @@ public class GroovyShell extends GroovyObjectSupport {
 
     /**
      * Utility method to check through reflection if the class appears to be a
-     * JUnit 3.8.x test, i.e.&nsbp;checks if it extends JUnit 3.8.x's TestCase.
+     * JUnit 3.8.x test, i.e. checks if it extends JUnit 3.8.x's TestCase.
      *
      * @param scriptClass the class we want to check
      * @return true if the class appears to be a test
@@ -433,7 +433,7 @@ public class GroovyShell extends GroovyObjectSupport {
 
      /**
      * Utility method to check through reflection if the class appears to be a
-     * JUnit 3.8.x test suite, i.e.&nsbp;checks if it extends JUnit 3.8.x's TestSuite.
+     * JUnit 3.8.x test suite, i.e. checks if it extends JUnit 3.8.x's TestSuite.
      *
      * @param scriptClass the class we want to check
      * @return true if the class appears to be a test
@@ -460,18 +460,12 @@ public class GroovyShell extends GroovyObjectSupport {
 
     /**
      * Utility method to check via reflection if the parsed class appears to be a JUnit4
-     * test, i.e.&nsbp;checks whether it appears to be using the relevant JUnit 4 annotations.
+     * test, i.e. checks whether it appears to be using the relevant JUnit 4 annotations.
      *
      * @param scriptClass the class we want to check
      * @return true if the class appears to be a test
      */
     private boolean isJUnit4Test(Class scriptClass) {
-        // if we are running under Java 1.4 don't bother trying to check
-        char version = System.getProperty("java.version").charAt(2);
-        if (version < '5') {
-            return false;
-        }
-
         // check if there are appropriate class or method annotations
         // that suggest we have a JUnit 4 test
         boolean isTest = false;

@@ -259,7 +259,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == int_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Integer_TYPE
         })
         def x = a?.x
         '''
@@ -272,7 +272,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == long_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Long_TYPE
         })
         def x = a?.x
         '''
@@ -285,7 +285,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == char_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Character_TYPE
         })
         def x = a?.x
         assert x == 'a'
@@ -1391,6 +1391,52 @@ println someInt
             Foo foo = new Foo().setNum(1).setName('fluent')
             assert foo.num == 1
             assert foo.name == 'fluent'
+        '''
+    }
+
+    // GROOVY-7610
+    void testNullSafeIsCallConditionShouldNotThrowVerifyError() {
+        assertScript '''
+            class A {
+                void ifCondition(Object x, Object y) {
+                    if (x?.is(y))
+                        return
+                }
+
+                void ternaryCondition(Object x, Object y) {
+                    x?.is(y) ? 'foo' : 'bar'
+                }
+            }
+            new A()
+        '''
+    }
+
+    // GROOVY-7631
+    void testPrimitiveNotEqualNullShouldReturnTrue() {
+        assertScript '''
+            assert false != null
+            assert true != null
+            assert (byte) 1 != null
+            assert (short) 1 != null
+            assert 0 != null
+            assert 1 != null
+            assert 1L != null
+            assert 1f != null
+            assert 1d != null
+            assert (char) 1 != null
+        '''
+    }
+
+    // GROOVY-7639
+    void testComparisonOfPrimitiveWithNullSafePrimitivePropertyExpression() {
+        assertScript '''
+            class Foo {
+                int bar
+            }
+            Foo foo = null
+            assert !(foo?.bar == 7)
+            assert !(foo?.bar > 7)
+            assert foo?.bar < 7
         '''
     }
 }

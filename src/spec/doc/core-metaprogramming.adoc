@@ -63,7 +63,7 @@ public interface GroovyObject {
 ==== invokeMethod
 
 According to the schema in <<core-metaprogramming.adoc#_runtime_metaprogramming,Runtime Metaprogramming>> this method is called when the method you called is not present on a Groovy object.
-Here is a simple example using a overriden `invokeMethod()` method:
+Here is a simple example using a overridden `invokeMethod()` method:
 
 [source,groovy]
 ----
@@ -348,7 +348,7 @@ There is a distinct section on `@Category` in the <<core-metaprogramming.adoc#xf
 
 (TBD)
 
-===== Magic package
+===== Magic package (Maksym Stavytskyi)
 
 (TBD)
 
@@ -600,7 +600,7 @@ public static String getText(File file, String charset) throws IOException {
 }
 ----------------------------------------------------------------------------
 
-You may notice that the extension method is defined using a static method in a ``helper'' class (where various extension
+You may notice that the extension method is defined using a static method in a helper class (where various extension
 methods are defined). The first argument of the `getText` method corresponds to the receiver, while additional parameters
 correspond to the arguments of the extension method. So here, we are defining a method called _getText_ on
 the `File` class (because the first argument is of type `File`), which takes a single argument as a parameter (the encoding `String`).
@@ -645,7 +645,7 @@ include::{projectdir}/src/spec/test/ExtensionModuleSpecTest.groovy[tags=instance
 ==== Static methods
 
 It is also possible to add static methods to a class. In that case, the static method needs to be defined in its *own*
-file:
+file. Static and instance extension methods *cannot* be present in the same class.
 
 [source,groovy]
 .StaticStringExtension.groovy
@@ -965,6 +965,22 @@ Set to false to obtain exactly one constructor but with initial value support an
 include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_defaults_false,indent=0]
 ----
 |=======================================================================
+
+Setting the `defaults` annotation attribute to `false` and the `force` annotation attribute to `true` allows
+multiple tuple constructors to be created by using different customization options for the different cases
+(provided each case has a different type signature) as shown in the following example:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_defaults_multiple,indent=0]
+----
+
+Similarly, here is another example using different options for `includes`:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_defaults_multipleIncludes,indent=0]
+----
 
 [[xform-MapConstructor]]
 ===== @groovy.transform.MapConstructor
@@ -1755,7 +1771,7 @@ For details
 
 ==== Easier cloning and externalizing
 
-Groovy provides two annotations aimed at facilitating the implementation of `Clonable` and `Externalizable` interfaces,
+Groovy provides two annotations aimed at facilitating the implementation of `Cloneable` and `Externalizable` interfaces,
 respectively named `@AutoClone` and `@AutoExternalize`.
 
 [[xform-AutoClone]]
@@ -1962,7 +1978,7 @@ This code is equivalent to annotating a class with `@TimedInterrupt` like this:
 
 [source,groovy]
 ----
-@TimedInterrup(value=1, unit=TimeUnit.SECONDS)
+@TimedInterrupt(value=1, unit=TimeUnit.SECONDS)
 class MyClass {
     def fib(int n) {
         n<2?n:fib(n-1)+fib(n-2)
