@@ -809,7 +809,7 @@ include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=
 ----
 include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tostring_example_ignoreNulls,indent=0]
 ----
-|includePackage|False|Use fully qualified class name instead of simple name in toString|
+|includePackage|True|Use fully qualified class name instead of simple name in toString|
 [source,groovy]
 ----
 include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tostring_example_includePackage,indent=0]
@@ -2663,7 +2663,7 @@ and such a thing rarely happens.
 
 Classes of the Abstract Syntax Tree belong to the `org.codehaus.groovy.ast` package. It is recommended to the reader
 to use the Groovy Console, in particular the AST browser tool, to gain knowledge about those classes. However, a good
-resource for learning is the https://github.com/apache/incubator-groovy/tree/master/src/test/org/codehaus/groovy/ast/builder[AST Builder]
+resource for learning is the https://github.com/apache/groovy/tree/master/src/test/org/codehaus/groovy/ast/builder[AST Builder]
 test suite.
 
 ==== Testing AST transformations

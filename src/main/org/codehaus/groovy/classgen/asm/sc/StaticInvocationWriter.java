@@ -446,12 +446,10 @@ public class StaticInvocationWriter extends InvocationWriter {
         }
         // if call is spread safe, replace it with a for in loop
         if (spreadSafe && origin instanceof MethodCallExpression) {
-            // List literals should not be visited twice, avoid by using a temporary variable for the receiver
-            if (receiver instanceof ListExpression) {
-                TemporaryVariableExpression tmp = new TemporaryVariableExpression(receiver);
-                makeCall(origin, tmp, message, arguments, adapter, true, true, false);
-                tmp.remove(controller);
-                return;
+            // receiver expressions with side effects should not be visited twice, avoid by using a temporary variable
+            Expression tmpReceiver = receiver;
+            if (!(receiver instanceof VariableExpression) && !(receiver instanceof ConstantExpression)) {
+                tmpReceiver = new TemporaryVariableExpression(receiver);
             }
             MethodVisitor mv = controller.getMethodVisitor();
             CompileStack compileStack = controller.getCompileStack();
@@ -460,28 +458,20 @@ public class StaticInvocationWriter extends InvocationWriter {
             ClassNode classNode = controller.getClassNode();
             int counter = labelCounter.incrementAndGet();
 
-            // create an empty arraylist
-            VariableExpression result = new VariableExpression(
-                    "spreadresult" + counter,
-                    StaticCompilationVisitor.ARRAYLIST_CLASSNODE
-            );
+            // use a temporary variable for the arraylist in which the results of the spread call will be stored
             ConstructorCallExpression cce = new ConstructorCallExpression(StaticCompilationVisitor.ARRAYLIST_CLASSNODE, ArgumentListExpression.EMPTY_ARGUMENTS);
             cce.setNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET, StaticCompilationVisitor.ARRAYLIST_CONSTRUCTOR);
-            DeclarationExpression declr = new DeclarationExpression(
-                    result,
-                    Token.newSymbol("=", origin.getLineNumber(), origin.getColumnNumber()),
-                    cce
-            );
-            declr.visit(controller.getAcg());
+            TemporaryVariableExpression result = new TemporaryVariableExpression(cce);
+            result.visit(controller.getAcg());
             operandStack.pop();
             // if (receiver != null)
-            receiver.visit(controller.getAcg());
+            tmpReceiver.visit(controller.getAcg());
             Label ifnull = compileStack.createLocalLabel("ifnull_" + counter);
             mv.visitJumpInsn(IFNULL, ifnull);
             operandStack.remove(1); // receiver consumed by if()
             Label nonull = compileStack.createLocalLabel("nonull_" + counter);
             mv.visitLabel(nonull);
-            ClassNode componentType = StaticTypeCheckingVisitor.inferLoopElementType(typeChooser.resolveType(receiver, classNode));
+            ClassNode componentType = StaticTypeCheckingVisitor.inferLoopElementType(typeChooser.resolveType(tmpReceiver, classNode));
             Parameter iterator = new Parameter(componentType, "for$it$" + counter);
             VariableExpression iteratorAsVar = new VariableExpression(iterator);
             MethodCallExpression origMCE = (MethodCallExpression) origin;
@@ -503,7 +493,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             // for (e in receiver) { result.add(e?.method(arguments) }
             ForStatement stmt = new ForStatement(
                     iterator,
-                    receiver,
+                    tmpReceiver,
                     new ExpressionStatement(add)
             );
             stmt.visit(controller.getAcg());
@@ -513,6 +503,12 @@ public class StaticInvocationWriter extends InvocationWriter {
             // end of if/else
             // return result list
             result.visit(controller.getAcg());
+
+            // cleanup temporary variables
+            if (tmpReceiver instanceof TemporaryVariableExpression) {
+                ((TemporaryVariableExpression) tmpReceiver).remove(controller);
+            }
+            result.remove(controller);
         } else if (safe && origin instanceof MethodCallExpression) {
             // wrap call in an IFNULL check
             MethodVisitor mv = controller.getMethodVisitor();
